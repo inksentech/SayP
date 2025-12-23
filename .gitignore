@@ -1,0 +1,77 @@
+# Repository-level .gitignore for SayP_1
+
+# Ignore build outputs
+**/bin/
+**/obj/
+**/out/
+
+# Visual Studio / .NET
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+*.exe
+*.dll
+*.pdb
+*.mdb
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+.vscode/
+
+# User secrets / local settings
+secrets.json
+appsettings*.Development.json
+appsettings*.Local.json
+.env
+
+# Publish
+publish/
+**/publish/
+*.Publish.xml
+
+# Node / frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+/SayP.WebChat/node_modules/
+/SayP.WebChat/dist/
+/SayP.WebChat/.vite/
+/SayP.WebChat/.env
+
+# Docker
+docker-compose.override.yml
+.env
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+logs/
+*.log
+
+# Database backups / local DB files
+*.mdf
+*.ldf
+*.sqlite
+
+# Test / coverage
+.coverage
+coverage/
+coverage-results/
+
+# Misc
+*.userprefs
+*.lock.json
+
+# Ignore compiled Python files (in case any appear)
+__pycache__/
+*.pyc
+
+# End of .gitignore
