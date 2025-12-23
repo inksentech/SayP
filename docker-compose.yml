@@ -1,0 +1,86 @@
+# ==============================================
+# SAYP STANDALONE DOCKER COMPOSE
+# ==============================================
+# This file runs SayP independently with its own infrastructure.
+# Copy this to your project and configure .env file.
+# ==============================================
+
+version: '3.8'
+
+services:
+  # SayP PostgreSQL Database
+  sayp-postgres:
+    image: postgres:16-alpine
+    container_name: sayp_postgres
+    restart: always
+    ports:
+      - "5437:5432"
+    environment:
+      - POSTGRES_USER=${SAYP_DB_USER:-admin}
+      - POSTGRES_PASSWORD=${SAYP_DB_PASSWORD:-P@ssw0rd123!}
+      - POSTGRES_DB=${SAYP_DB_NAME:-sayp_db}
+    volumes:
+      - sayp_postgres_data:/var/lib/postgresql/data
+    networks:
+      - sayp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SAYP_DB_USER:-admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # SayP Redis (caching, rate limiting)
+  sayp-redis:
+    image: redis:7-alpine
+    container_name: sayp_redis
+    restart: always
+    ports:
+      - "6381:6379"
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:-Redis@2024!}"
+    volumes:
+      - sayp_redis_data:/data
+    networks:
+      - sayp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-Redis@2024!}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # SayP API
+  sayp-api:
+    build:
+      context: .
+      dockerfile: SayP.Api/Dockerfile
+    container_name: sayp_api
+    restart: always
+    ports:
+      - "5100:8080"
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Override DB connection for Docker network
+      - SAYP_DB_HOST=sayp-postgres
+      - SAYP_DB_PORT=5432
+      # Override Redis for Docker network
+      - REDIS_CONNECTION_STRING=sayp-redis:6379,password=${REDIS_PASSWORD:-Redis@2024!}
+    depends_on:
+      sayp-postgres:
+        condition: service_healthy
+      sayp-redis:
+        condition: service_healthy
+    networks:
+      - sayp-network
+      - external-network  # To connect to external backend
+
+networks:
+  sayp-network:
+    driver: bridge
+  external-network:
+    external: true
+    name: ${EXTERNAL_NETWORK:-app-network}  # Connect to backend's network
+
+volumes:
+  sayp_postgres_data:
+  sayp_redis_data:
